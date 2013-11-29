@@ -18,7 +18,7 @@ import webapp2
 
 class MainHandler(webapp2.RequestHandler):
     def get(self):
-        self.response.write('PTT Buying Parser GAE.')
+        self.response.write('PTT Buying Parser GAE. test')
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler)
