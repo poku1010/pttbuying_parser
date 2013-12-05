@@ -21,16 +21,23 @@ from HTMLParser import HTMLParser
 import webapp2 # from GAE
 import json
 import urllib2
+import socket #set a global timeout for all socket operations (including HTTP requests)
 
 class Item(ndb.Model):
-    #Models an individual item entry with title, keyword, price, and date.
-    title = ndb.StringProperty(indexed=False)
-    content = ndb.StringProperty(indexed=False)
-    price = ndb.StringProperty(indexed=False)
+    #Models an individual item entry.
+    #https://developers.google.com/appengine/docs/python/ndb/properties?hl=zh-tw
+    item_title = ndb.StringProperty(indexed=False)
+    item_author_name = ndb.StringProperty(indexed=False)
+    item_link = ndb.StringProperty(indexed=True)
+    item_description_strip = ndb.StringProperty(indexed=False)
+    item_price = ndb.StringProperty(indexed=False)
     datetime = ndb.DateTimeProperty(auto_now_add=True)
 
 class MainHandler(webapp2.RequestHandler):
     def get(self):
+        #http://stackoverflow.com/questions/8464391/what-should-i-do-if-socket-setdefaulttimeout-is-not-working
+        socket.setdefaulttimeout(300) #try to resolove the request timeout issue
+
         url='http://pipes.yahoo.com/pipes/pipe.run?_id=29604671a0cf78378f569387a5100e39&_render=json'
         response = urllib2.urlopen(url)
         data = response.read()
@@ -39,7 +46,6 @@ class MainHandler(webapp2.RequestHandler):
         
         for item in items:
             item_author_name = item.get('author')['name']
-            #author_name = author.get('name')
             item_title = item.get('title')
             item_link = item.get('link')
 
@@ -61,11 +67,36 @@ class MainHandler(webapp2.RequestHandler):
             
             item_price = item_description_strip[price_start:price_start+item_price_end]
 
-            self.response.out.write(item_price)
-            self.response.out.write('<br><hr>')
+            self.response.out.write('item_author_name: '+item_author_name+'<br>')
+            self.response.out.write('item_title: '+item_title+'<br>')
+            self.response.out.write('item_link: '+item_link+'<br>')
+            self.response.out.write('item_price: '+item_price+'<br>')
             
-            #campaignID = item.get("CampaignID")
+            #https://developers.google.com/appengine/docs/python/ndb/queries
+            qry = Item.query(Item.item_link == item_link)
+            qry_item = qry.fetch(1)
 
+            #check data is exist in db or not
+            if qry_item:
+                self.response.out.write('isExist: Yes <br>')
+                
+            else:
+                self.response.out.write('isExist: No <br>')
+                # We set the parent key on each 'items' to ensure each Source's
+                # items are in the same entity group.
+                item_db = Item(parent=ndb.Key('Source', 'PTT_mobilesales'),
+                            item_title = item_title,
+                            item_author_name = item_author_name,
+                            item_link = item_link,
+                            item_description_strip = item_description_strip,
+                            item_price = item_price)
+                item_db.put()
+
+            self.response.out.write('<br><hr>')
+
+                
+            
+            
         #self.response.write('PTT Buying Parser GAE.')
         #self.response.out.write(json_data)
 
