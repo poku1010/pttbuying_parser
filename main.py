@@ -22,7 +22,6 @@ import webapp2
 import json
 import urllib2
 
-
 class Item(ndb.Model):
     #Models an individual item entry with title, keyword, price, and date.
     title = ndb.StringProperty(indexed=False)
@@ -73,7 +72,8 @@ def strip_tags(html):
     s = MLStripper()
     s.feed(html)
     return s.get_data()
- 		
+
 app = webapp2.WSGIApplication([
     ('/', MainHandler)
 ], debug=True)
+
