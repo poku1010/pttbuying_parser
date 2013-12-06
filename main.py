@@ -52,8 +52,8 @@ class MainHandler(webapp2.RequestHandler):
             item_description = item.get('description')['content']
             item_description_strip = strip_tags(item_description)
 
-            item_price_start = item_description_strip.find(u'欲售價格：')
-            price_start = item_price_start+len(u'欲售價格：')
+            item_price_start = item_description_strip.find(u'欲售價格')
+            price_start = item_price_start+len(u'欲售價格')
             
             possible_end_words = [u'售出原因', u'交易方式']
             item_price_end = -1
@@ -66,6 +66,9 @@ class MainHandler(webapp2.RequestHandler):
                 # item_price_end = item_description_strip[price_start:].find(u'交易方式')
             
             item_price = item_description_strip[price_start:price_start+item_price_end]
+            char_should_not_exist = [' ', ':', u'：']
+            for char in char_should_not_exist:
+                item_price = item_price.replace(char, '')
 
             self.response.out.write('item_author_name: '+item_author_name+'<br>')
             self.response.out.write('item_title: '+item_title+'<br>')
