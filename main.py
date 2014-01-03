@@ -43,6 +43,20 @@ class Item(EndpointsModel):
     item_price = ndb.StringProperty(indexed=False)
     datetime = ndb.DateTimeProperty(auto_now_add=True)
 
+class MLStripper(HTMLParser):
+    def __init__(self):
+        self.reset()
+        self.fed = []
+    def handle_data(self, d):
+        self.fed.append(d)
+    def get_data(self):
+        return ''.join(self.fed)
+
+def strip_tags(html):
+    s = MLStripper()
+    s.feed(html)
+    return s.get_data()
+
 class MainHandler(webapp2.RequestHandler):
     def get(self):
         #http://stackoverflow.com/questions/8464391/what-should-i-do-if-socket-setdefaulttimeout-is-not-working
@@ -59,6 +73,7 @@ class MainHandler(webapp2.RequestHandler):
             item_title = item.get('title')
             item_link = item.get('link')
 
+			# ===== get price from item description =====
             item_description = item.get('description')['content']
             item_description_strip = strip_tags(item_description)
 
@@ -66,19 +81,16 @@ class MainHandler(webapp2.RequestHandler):
             price_start = item_price_start+len(u'欲售價格')
             
             possible_end_words = [u'售出原因', u'交易方式']
-            item_price_end = -1
+            price_end = -1
             for word in possible_end_words:
-                item_price_end = item_description_strip[price_start:].find(word)
-                if item_price_end != -1: break
+                price_end = item_description_strip[price_start:].find(word)
+                if price_end != -1: break
             
-            # item_price_end = item_description_strip[price_start:].find(u'售出原因')
-            # if item_price_end == -1:
-                # item_price_end = item_description_strip[price_start:].find(u'交易方式')
-            
-            item_price = item_description_strip[price_start:price_start+item_price_end]
+            item_price = item_description_strip[price_start:price_start+price_end]
             char_should_not_exist = [' ', ':', u'：']
             for char in char_should_not_exist:
                 item_price = item_price.replace(char, '')
+			# ===========================================
 
             # item_id_start = item_link.find(u'M.')
             # item_id_end = item_link.find(u'.A')
@@ -120,20 +132,6 @@ class MainHandler(webapp2.RequestHandler):
             
         #self.response.write('PTT Buying Parser GAE.')
         #self.response.out.write(json_data)
-
-class MLStripper(HTMLParser):
-    def __init__(self):
-        self.reset()
-        self.fed = []
-    def handle_data(self, d):
-        self.fed.append(d)
-    def get_data(self):
-        return ''.join(self.fed)
-
-def strip_tags(html):
-    s = MLStripper()
-    s.feed(html)
-    return s.get_data()
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler)
