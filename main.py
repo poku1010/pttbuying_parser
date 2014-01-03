@@ -15,17 +15,27 @@
 # limitations under the License.
 #
 
-from google.appengine.ext import ndb # from GAE
 from HTMLParser import HTMLParser
+
+from google.appengine.ext import endpoints #for api 
+from google.appengine.ext import ndb # from GAE
+from protorpc import remote
+
+from endpoints_proto_datastore.ndb import EndpointsModel
 
 import webapp2 # from GAE
 import json
 import urllib2
 import socket #set a global timeout for all socket operations (including HTTP requests)
 
-class Item(ndb.Model):
+# import hashlib
+# import datetime
+
+class Item(EndpointsModel):
     #Models an individual item entry.
     #https://developers.google.com/appengine/docs/python/ndb/properties?hl=zh-tw
+
+    # item_id = ndb.StringProperty(indexed=False)
     item_title = ndb.StringProperty(indexed=False)
     item_author_name = ndb.StringProperty(indexed=False)
     item_link = ndb.StringProperty(indexed=True)
@@ -36,10 +46,10 @@ class Item(ndb.Model):
 class MainHandler(webapp2.RequestHandler):
     def get(self):
         #http://stackoverflow.com/questions/8464391/what-should-i-do-if-socket-setdefaulttimeout-is-not-working
-        socket.setdefaulttimeout(300) #try to resolove the request timeout issue
+        #socket.setdefaulttimeout(12000) #try to resolove the request timeout issue
 
         url='http://pipes.yahoo.com/pipes/pipe.run?_id=29604671a0cf78378f569387a5100e39&_render=json'
-        response = urllib2.urlopen(url)
+        response = urllib2.urlopen(url, timeout=40000) #try to resolove the request timeout issue
         data = response.read()
         json_data = json.loads(data)
         items = json_data.get('value')['items']
@@ -70,11 +80,18 @@ class MainHandler(webapp2.RequestHandler):
             for char in char_should_not_exist:
                 item_price = item_price.replace(char, '')
 
+            # item_id_start = item_link.find(u'M.')
+            # item_id_end = item_link.find(u'.A')
+            # item_id = item_link[item_id_start+2:item_id_end]
+            
+            # item_id = hashlib.sha224( str( datetime.datetime.now() ) ).hexdigest()
+            
             self.response.out.write('item_author_name: '+item_author_name+'<br>')
             self.response.out.write('item_title: '+item_title+'<br>')
             self.response.out.write('item_link: '+item_link+'<br>')
             self.response.out.write('item_price: '+item_price+'<br>')
-            
+            # self.response.out.write('item_id: '+item_id+'<br>')
+
             #https://developers.google.com/appengine/docs/python/ndb/queries
             qry = Item.query(Item.item_link == item_link)
             qry_item = qry.fetch(1)
@@ -82,6 +99,7 @@ class MainHandler(webapp2.RequestHandler):
             #check data is exist in db or not
             if qry_item:
                 self.response.out.write('isExist: Yes <br>')
+                # self.response.out.write(qry_item )
                 
             else:
                 self.response.out.write('isExist: No <br>')
