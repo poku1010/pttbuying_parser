@@ -1,4 +1,4 @@
-application: pttbuying
+application: fleebuy
 version: 1
 runtime: python27
 api_version: 1
@@ -10,17 +10,17 @@ handlers:
   upload: favicon\.ico
 
 # Endpoints handler
-- url: /_ah/spi/.*
-  #script: helloworld_api.APPLICATION
-  script: pttbuying_api.APPLICATION
+# - url: /_ah/spi/.*
+#   #script: helloworld_api.APPLICATION
+#   script: pttbuying_api.APPLICATION
 
 - url: .*
-  script: main.app
+  script: main.application
 
 libraries:
 - name: webapp2
   version: "2.5.2"
 - name: pycrypto
   version: latest
-- name: endpoints
-  version: 1.0
+# - name: endpoints
+#   version: 1.0

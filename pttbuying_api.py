@@ -4,7 +4,7 @@
 Defined here are the ProtoRPC messages needed to define Schemas for methods
 as well as those methods defined in an API.
 """
-
+#http://localhost:8080/_ah/api/explorer
 
 import endpoints
 
