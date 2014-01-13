@@ -18,26 +18,10 @@ from google.appengine.ext import webapp
 from google.appengine.ext import db
 from google.appengine.ext.webapp.util import run_wsgi_app
 
-# import models
+import models
 from google.appengine.api import search 
 _INDEX_NAME_ALL = 'search_all'
-
-class Item(db.Model):
-    item_title = db.StringProperty(multiline=False)
-    item_author_name = db.StringProperty(multiline=False)
-    item_link = db.StringProperty(multiline=False)
-    item_description_strip = db.TextProperty()
-    item_price = db.TextProperty()
-    datetime = db.DateTimeProperty(auto_now_add=True)
     
-    INDEX_TITLE_FROM_PROP = 'item_title'
-    INDEX_ONLY = ['item_title', 'item_description_strip']
-    INDEX_USES_MULTI_ENTITIES = True
-    
-    @classmethod
-    def SearchableProperties(cls):
-        return [['item_title'], ['item_link'], ['item_description_strip'], ['item_price']]
-
 class MLStripper(HTMLParser):
     def __init__(self):
         self.reset()
@@ -97,7 +81,7 @@ class MainHandler(webapp.RequestHandler):
                 self.response.out.write('isExist: Yes <br>')
             else:
                 self.response.out.write('isExist: No <br>')
-                item = Item()
+                item = models.Item()
                 item.item_title = item_title
                 item.item_author_name = item_author_name
                 item.item_link = item_link
@@ -164,7 +148,7 @@ rest.Dispatcher.base_url = "/rest"
 # rest.Dispatcher.add_models_from_module(__name__)
 
 # add specific models
-rest.Dispatcher.add_models({"Item": Item})
+rest.Dispatcher.add_models({"Item": models.Item})
 
 def main():
 #   wsgiref.handlers.CGIHandler().run(application)
