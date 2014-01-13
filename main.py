@@ -16,8 +16,27 @@ import rest
 from google.appengine.api import users
 from google.appengine.ext import webapp
 from google.appengine.ext import db
+from google.appengine.ext.webapp.util import run_wsgi_app
 
-import models
+# import models
+from google.appengine.api import search 
+_INDEX_NAME_ALL = 'search_all'
+
+class Item(db.Model):
+    item_title = db.StringProperty(multiline=False)
+    item_author_name = db.StringProperty(multiline=False)
+    item_link = db.StringProperty(multiline=False)
+    item_description_strip = db.TextProperty()
+    item_price = db.TextProperty()
+    datetime = db.DateTimeProperty(auto_now_add=True)
+    
+    INDEX_TITLE_FROM_PROP = 'item_title'
+    INDEX_ONLY = ['item_title', 'item_description_strip']
+    INDEX_USES_MULTI_ENTITIES = True
+    
+    @classmethod
+    def SearchableProperties(cls):
+        return [['item_title'], ['item_link'], ['item_description_strip'], ['item_price']]
 
 class MLStripper(HTMLParser):
     def __init__(self):
@@ -78,17 +97,62 @@ class MainHandler(webapp.RequestHandler):
                 self.response.out.write('isExist: Yes <br>')
             else:
                 self.response.out.write('isExist: No <br>')
-                item = models.Item()
+                item = Item()
                 item.item_title = item_title
                 item.item_author_name = item_author_name
                 item.item_link = item_link
                 item.item_description_strip = item_description_strip
                 item.item_price = item_price
+                
+                document = search.Document(
+                    doc_id=item_link,
+                    fields=[search.TextField(name='item_title', value=item_title),
+                            search.TextField(name='item_description_strip', value=item_description_strip),
+                            search.TextField(name='item_price', value=item_price, language='zh')],
+                    language='zh')
+                
+                try:
+                    index = search.Index(name="_INDEX_NAME_ALL")
+                    index.put(document)
+                except search.Error:
+                    logging.exception('Index Put failed')
+                    
                 item.put()
             self.response.out.write('<br><hr>')
+            
+class KeywordSearchHandler(webapp.RequestHandler):
+# https://developers.google.com/appengine/docs/python/apis
+# http://www.keakon.net/2012/05/09/GAE%E5%B7%B2%E6%94%AF%E6%8C%81%E4%B8%AD%E6%96%87%E5%85%A8%E6%96%87%E6%90%9C%E7%B4%A2
+# http://fts-webinar.appspot.com/#1
+# https://developers.google.com/appengine/training/fts_intro/lesson2
+# https://github.com/GoogleCloudPlatform/appengine-search-python-java
+    def get(self):
+        k1 = self.request.get("k1")
+        k2 = self.request.get("k2")
+        k3 = self.request.get("k3")
+        
+        self.response.out.write('k1: '+k1+'<br>')
+        self.response.out.write('k2: '+k2+'<br>')
+        self.response.out.write('k3: '+k3+'<br>')
+        self.response.out.write('<br><hr>')
+        
+        try:
+            index = search.Index(name="_INDEX_NAME_ALL")
+            search_results = index.search(k1)
+            if search_results.number_found:
+                for doc in search_results:
+                    self.response.out.write('doc_id: '+doc.doc_id+'<br>')
+                    self.response.out.write('item_title: '+doc.field('item_title').value+'<br>')
+#                     self.response.out.write( doc.fields ) )
+                    self.response.out.write('<br><hr>')
+            else:
+                self.response.out.write('0 result')
+        except search.Error:
+            self.response.out.write('search.Error at KeywordSearchHandler')
 
 application = webapp.WSGIApplication([
     ('/', MainHandler),
+    ('/keyword', KeywordSearchHandler),
     ('/rest/.*', rest.Dispatcher)
 ], debug=True)
 
@@ -100,12 +164,13 @@ rest.Dispatcher.base_url = "/rest"
 # rest.Dispatcher.add_models_from_module(__name__)
 
 # add specific models
-rest.Dispatcher.add_models({"Item": models.Item})
+rest.Dispatcher.add_models({"Item": Item})
 
 def main():
-  wsgiref.handlers.CGIHandler().run(application)
+#   wsgiref.handlers.CGIHandler().run(application)
+    run_wsgi_app(application)
 
 
 if __name__ == '__main__':
-  main()
+    main()
 
