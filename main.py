@@ -188,7 +188,8 @@ class KeywordSearchHandler(webapp.RequestHandler):
                         self.response.out.write('item_price: '+doc.field('item_price').value+'<br>')
                         self.response.out.write('<br><hr>')
             else:
-                self.response.out.write('0 result')
+                if _IS_DEBUG == 'true':
+                    self.response.out.write('0 result')
             
             if _IS_DEBUG != 'true':
                 search_results_json['list']['Item'] = search_results_items

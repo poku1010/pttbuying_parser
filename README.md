@@ -54,4 +54,4 @@ Search Function:
      - "k2" -> keyword sets
      - "k3" -> keyword sets
      
-GET http://fleebuy.appspot.com/search?is_union=false&k1=htc&k2=new
+GET http://fleebuy.appspot.com/search?is_union=true&k1=htc&k2=ONE
