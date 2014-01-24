@@ -175,6 +175,7 @@ class KeywordSearchHandler(webapp.RequestHandler):
             
             if search_results.number_found:
                 for doc in search_results:
+                    search_results_items_single={}
                     search_results_items_single['key'] = doc.doc_id
                     search_results_items_single['item_title'] = doc.field('item_title').value
                     search_results_items_single['item_link'] = doc.field('item_link').value
