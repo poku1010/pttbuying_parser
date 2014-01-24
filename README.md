@@ -16,12 +16,14 @@ Object Retrieval:
 =================
 
 * Gets the first N Item instances
+
 GET http://fleebuy.appspot.com/rest/Item
 
 *  Gets the next N Item instances, starting at offset 10.  Note
    the returned list element contains an "offset" attribute.  If it has a
    value, that is the next offset to use to retrieve more results.  If it is
    empty, there are no more results.
+   
 GET http://fleebuy.appspot.com/rest/Item?offset=10
 
 * Gets the Item instances, starting with a date property "equal to" 2014-01-12T08:07:09.200150.
@@ -34,15 +36,17 @@ GET http://fleebuy.appspot.com/rest/Item?offset=10
      - "fne_" -> "not equal to"
      - "fin_" -> "in <comma_separated_list>"
    Multiple operators may be provided, they are AND'ed together).
+   
 GET http://fleebuy.appspot.com/rest/Item?feq_datetime=2014-01-12T08:07:09.200150
 
-*Gets a single WholeEnchilada instance
+* Gets a single WholeEnchilada instance
+
 GET http://fleebuy.appspot.com/rest/Item/aglzfmZsZWVidXlyEQsSBEl0ZW0YgICAgMD6kwsM
 
 Search Function:
 =================
 
-*Normal Usage
+* Normal Usage
    Available operators:
      - "is_union" -> must to set the value as true or false
      - "is_debug" -> set the value as true or false to open the debug mode or not.
